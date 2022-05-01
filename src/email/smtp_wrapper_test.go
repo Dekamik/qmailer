@@ -16,7 +16,7 @@ func TestPlainAuth_Any_CallsPlainAuth(t *testing.T) {
 		wasCalled = true
 		return nil
 	}
-	w := Wrapper{smtpPlainAuth: mockedPlainAuth}
+	w := wrapper{smtpPlainAuth: mockedPlainAuth}
 
 	w.PlainAuth("", "", "", "")
 
@@ -29,7 +29,7 @@ func TestSendMail_Any_CallsSendMail(t *testing.T) {
 		wasCalled = true
 		return nil
 	}
-	w := Wrapper{smtpSendMail: mockedSendMail}
+	w := wrapper{smtpSendMail: mockedSendMail}
 
 	_ = w.SendMail("", nil, "", nil, nil)
 

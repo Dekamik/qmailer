@@ -4,12 +4,13 @@ import (
 	"strings"
 )
 
-type IEmailer interface {
-	Send(email Email, config Config) error
+type Emailer interface {
+	Send(email Email) error
 }
 
-type Emailer struct {
+type emailer struct {
 	smtpWrapper SmtpWrapper
+	config      Config
 }
 
 type Config struct {
@@ -26,16 +27,16 @@ type Email struct {
 	Body    string
 }
 
-func NewEmailer(smtpWrapper SmtpWrapper) *Emailer {
-	return &Emailer{smtpWrapper: smtpWrapper}
+func NewEmailer(smtpWrapper SmtpWrapper, config Config) *emailer {
+	return &emailer{smtpWrapper: smtpWrapper, config: config}
 }
 
-func (e *Emailer) Send(email Email, config Config) error {
-	message := []byte("From: " + config.From + "\r\n" +
+func (e *emailer) Send(email Email) error {
+	message := []byte("From: " + e.config.From + "\r\n" +
 		"To: " + strings.Join(email.To, ", ") + "\r\n" +
 		"Subject: " + email.Subject + "\r\n" +
 		"Email Body: " + email.Body + "\r\n")
 
-	auth := e.smtpWrapper.PlainAuth("", config.User, config.Pass, config.Host)
-	return e.smtpWrapper.SendMail(config.Host+":"+config.Port, auth, config.From, email.To, message)
+	auth := e.smtpWrapper.PlainAuth("", e.config.User, e.config.Pass, e.config.Host)
+	return e.smtpWrapper.SendMail(e.config.Host+":"+e.config.Port, auth, e.config.From, email.To, message)
 }

@@ -33,7 +33,7 @@ func main() {
 	}
 
 	smtpWrapper := email.NewSmtpWrapper()
-	emailer := email.NewEmailer(smtpWrapper)
+	emailer := email.NewEmailer(smtpWrapper, emailConfig)
 
 	host := os.Getenv("RABBITMQ_HOST")
 	queue := os.Getenv("RABBITMQ_QUEUE")
@@ -89,7 +89,7 @@ func main() {
 				Body:    "",
 			}
 
-			err := emailer.Send(message, emailConfig)
+			err := emailer.Send(message)
 			if err != nil {
 				logError("An error occurred when sending email", err)
 			}
