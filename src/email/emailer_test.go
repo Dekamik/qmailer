@@ -3,22 +3,9 @@ package email
 import (
     "github.com/stretchr/testify/mock"
     "net/smtp"
+    "strings"
     "testing"
 )
-
-var config = Config{
-    Host: "smtp.any.com",
-    Port: "25",
-    User: "AnyUser",
-    Pass: "AnyPassword",
-    From: "no-reply@any.com",
-}
-
-var testEmail = Email{
-    To:      []string{"any1@any.com", "any2@any.com"},
-    Subject: "AnySubject",
-    Body:    "AnyBody",
-}
 
 type MockedSmtpWrapper struct {
     mock.Mock
@@ -34,21 +21,29 @@ func (m *MockedSmtpWrapper) SendMail(addr string, a smtp.Auth, from string, to [
     return args.Error(0)
 }
 
-type MockedAuth struct {
-    mock.Mock
-}
-
-func (m *MockedAuth) Start(server *smtp.ServerInfo) (proto string, toServer []byte, err error) {
-    return "", nil, nil
-}
-
-func (m *MockedAuth) Next(fromServer []byte, more bool) (toServer []byte, err error) {
-    return nil, nil
-}
-
 func TestSend_Any_CallsPlainAuthAndSendMail(t *testing.T) {
+    // Arrange
     w := &MockedSmtpWrapper{}
     a := &MockedAuth{}
+
+    config := Config{
+        Host: "smtp.any.com",
+        Port: "25",
+        User: "AnyUser",
+        Pass: "AnyPassword",
+        From: "no-reply@any.com",
+    }
+    testEmail := Email{
+        To:      []string{"any1@any.com", "any2@any.com"},
+        Subject: "AnySubject",
+        Body:    "AnyBody",
+    }
+
+    addr := config.Host + ":" + config.Port
+    message := []byte("From: " + config.From + "\r\n" +
+        "To: " + strings.Join(testEmail.To, ", ") + "\r\n" +
+        "Subject: " + testEmail.Subject + "\r\n" +
+        "Email Body: " + testEmail.Body + "\r\n")
     w.Mock.On(
         "PlainAuth",
         "",
@@ -58,15 +53,18 @@ func TestSend_Any_CallsPlainAuthAndSendMail(t *testing.T) {
     ).Return(a)
     w.Mock.On(
         "SendMail",
-        config.Host+":"+config.Port,
+        addr,
         a,
         config.From,
         testEmail.To,
-        mock.Anything,
+        message,
     ).Return(nil)
     e := NewEmailer(w)
 
+    // Act
     _ = e.Send(testEmail, config)
 
+    // Assert
     w.AssertCalled(t, "PlainAuth", "", config.User, config.Pass, config.Host)
+    w.AssertCalled(t, "SendMail", addr, a, config.From, testEmail.To, message)
 }

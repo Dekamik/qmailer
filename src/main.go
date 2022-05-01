@@ -28,7 +28,7 @@ func main() {
         From: os.Getenv("EMAIL_FROM"),
     }
 
-    smtpWrapper := new(email.SmtpWrapper)
+    smtpWrapper := email.NewSmtpWrapper()
     emailer := email.NewEmailer(smtpWrapper)
 
     host := os.Getenv("RABBITMQ_HOST")

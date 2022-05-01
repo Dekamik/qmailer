@@ -7,12 +7,22 @@ type ISmtpWrapper interface {
     SendMail(string, smtp.Auth, string, []string, []byte) error
 }
 
-type SmtpWrapper struct{}
+type SmtpWrapper struct {
+    smtpPlainAuth func(string, string, string, string) smtp.Auth
+    smtpSendMail  func(string, smtp.Auth, string, []string, []byte) error
+}
+
+func NewSmtpWrapper() *SmtpWrapper {
+    return &SmtpWrapper{
+        smtpPlainAuth: smtp.PlainAuth,
+        smtpSendMail:  smtp.SendMail,
+    }
+}
 
 func (w *SmtpWrapper) PlainAuth(identity string, username string, password string, hostname string) smtp.Auth {
-    return smtp.PlainAuth(identity, username, password, hostname)
+    return w.smtpPlainAuth(identity, username, password, hostname)
 }
 
 func (w *SmtpWrapper) SendMail(addr string, a smtp.Auth, from string, to []string, msg []byte) error {
-    return smtp.SendMail(addr, a, from, to, msg)
+    return w.smtpSendMail(addr, a, from, to, msg)
 }
