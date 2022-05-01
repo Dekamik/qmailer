@@ -21,6 +21,20 @@ func (m *MockedSmtpWrapper) SendMail(addr string, a smtp.Auth, from string, to [
     return args.Error(0)
 }
 
+type MockedAuth struct {
+    mock.Mock
+}
+
+func (m *MockedAuth) Start(server *smtp.ServerInfo) (proto string, toServer []byte, err error) {
+    args := m.Called(server)
+    return args.String(0), args.Get(1).([]byte), args.Error(2)
+}
+
+func (m *MockedAuth) Next(fromServer []byte, more bool) (toServer []byte, err error) {
+    args := m.Called(fromServer, more)
+    return args.Get(0).([]byte), args.Error(1)
+}
+
 func TestSend_Any_CallsPlainAuthAndSendMail(t *testing.T) {
     // Arrange
     w := &MockedSmtpWrapper{}
